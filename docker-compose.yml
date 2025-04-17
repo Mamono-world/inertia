@@ -6,8 +6,6 @@ services:
         working_dir: /var/www/mamono
         volumes:
             - /var/www/mamono:/var/www/mamono
-            - ./docker/php/php.ini:/usr/local/etc/php/php.ini
-            - ./docker/php/php-fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf
         networks:
             - mamono-network
 
