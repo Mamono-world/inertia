@@ -12,15 +12,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/mamono
 
 # Copy Laravel project
-COPY . .
+COPY --chown=www-data:www-data . .
 
 # Create a non-root user for security
 RUN useradd -m laraveluser
 USER laraveluser
 
 # Set permissions for storage and cache directories
-RUN chmod -R 775 storage bootstrap/cache storage/framework/views storage/app/public
-RUN chown -R www-data:www-data storage bootstrap/cache storage/framework/views
 
 # Install Laravel dependencies with optimizations
 RUN composer install --no-dev --optimize-autoloader --prefer-dist
