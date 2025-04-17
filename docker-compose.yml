@@ -41,4 +41,3 @@ services:
 
 networks:
     mamono-network:
-        external: true
