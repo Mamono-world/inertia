@@ -1,36 +1,33 @@
+# Use PHP 8.4 base image with FPM
 FROM php:8.4-fpm
 
-# Install required extensions
+# Install system dependencies & PHP extensions
 RUN apt-get update && apt-get install -y \
-    zip unzip curl git libpq-dev libpng-dev libjpeg-dev libfreetype6-dev \
+    zip unzip curl git libpq-dev libpng-dev libjpeg-dev libfreetype6-dev npm nodejs \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql gd
 
-# Install Composer
+# Install Composer globally
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/mamono
 
-# Copy Laravel project
+# Copy Laravel project files and set ownership to www-data (PHP user)
 COPY --chown=www-data:www-data . .
 
-# Create a non-root user for security
-RUN useradd -m laraveluser
-USER laraveluser
+# Set file/folder permissions properly (use Laravel recommended ones)
+RUN chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
-# Set permissions for storage and cache directories
-
-# Install Laravel dependencies with optimizations
+# Install Laravel backend dependencies
 RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
-# Install npm dependencies and build assets (use production flag)
-RUN npm install --production
+# Install frontend dependencies and build for production
+RUN npm install && npm run build
 
-# Optionally, you can add custom php.ini configurations (increase limits)
-# COPY ./php.ini /usr/local/etc/php/conf.d/
-
-# Expose the port that PHP-FPM listens on
+# Expose PHP-FPM port
 EXPOSE 9000
 
-# Set the entrypoint for the container
+# Start PHP-FPM server
 CMD ["php-fpm"]

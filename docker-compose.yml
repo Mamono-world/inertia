@@ -1,22 +1,26 @@
 services:
     app:
-        build: .
-        image: php:8.3-fpm
-        container_name: mamono
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: mamono-app
+        container_name: mamono-app
         working_dir: /var/www/mamono
         volumes:
-            - /var/www/mamono:/var/www/mamono
+            - .:/var/www/mamono
         networks:
             - mamono-network
+        depends_on:
+            - db
 
     nginx:
         image: nginx:latest
         container_name: mamono-nginx
-        volumes:
-            - /var/www/mamono:/var/www/mamono
-            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
         ports:
-            - "81:81"
+            - "81:80" # Maps host port 81 to container's 80
+        volumes:
+            - .:/var/www/mamono
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
         depends_on:
             - app
         networks:
@@ -24,18 +28,22 @@ services:
 
     db:
         image: mariadb:latest
-        container_name: mamono-mariadb
+        container_name: mamono-db
+        ports:
+            - "3307:3306"  # Map DB to custom port
         environment:
             MYSQL_ROOT_PASSWORD: mamono-r00t!
             MYSQL_DATABASE: mamono
             MYSQL_USER: mamono
             MYSQL_PASSWORD: mamono00!
         volumes:
-            - ./docker/mysql/data:/var/lib/mysql
-        ports:
-            - "3307:3306"
+            - db-data:/var/lib/mysql
         networks:
             - mamono-network
 
+volumes:
+    db-data:
+
 networks:
     mamono-network:
+        driver: bridge
