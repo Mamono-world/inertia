@@ -1,0 +1,44 @@
+services:
+    app:
+        build: .
+        image: php:8.3-fpm
+        container_name: mamono
+        working_dir: /var/www/mamono
+        volumes:
+            - /var/www/mamono:/var/www/mamono
+            - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+            - ./docker/php/php-fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf
+        networks:
+            - mamono-network
+
+    nginx:
+        image: nginx:latest
+        container_name: mamono-nginx
+        volumes:
+            - /var/www/mamono:/var/www/mamono
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        ports:
+            - "80:80"
+        depends_on:
+            - app
+        networks:
+            - mamono-network
+
+    db:
+        image: mariadb:latest
+        container_name: mamono-mariadb
+        environment:
+            MYSQL_ROOT_PASSWORD: mamono-r00t!
+            MYSQL_DATABASE: mamono
+            MYSQL_USER: mamono
+            MYSQL_PASSWORD: mamono00!
+        volumes:
+            - ./docker/mysql/data:/var/lib/mysql
+        ports:
+            - "3306:3306"
+        networks:
+            - mamono-network
+
+networks:
+    mamono-network:
+        external: true
