@@ -1,33 +1,31 @@
-# Use PHP 8.4 base image with FPM
-FROM php:8.4-fpm
+# Base image for PHP + Composer + Node
+FROM php:8.3-fpm
 
-# Install system dependencies & PHP extensions
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    zip unzip curl git libpq-dev libpng-dev libjpeg-dev libfreetype6-dev npm nodejs \
+    zip unzip curl git libpng-dev libjpeg-dev libfreetype6-dev libpq-dev nodejs npm \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql gd
+    && docker-php-ext-install pdo pdo_mysql gd \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Composer globally
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /var/www/mamono
 
-# Copy Laravel project files and set ownership to www-data (PHP user)
+# Copy everything
 COPY --chown=www-data:www-data . .
 
-# Set file/folder permissions properly (use Laravel recommended ones)
+# Set proper permissions
 RUN chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
-# Install Laravel backend dependencies
+# Install backend dependencies
 RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
-# Install frontend dependencies and build for production
+# Now that Ziggy exists, we can safely build frontend
 RUN npm install && npm run build
+RUN php artisan migrate
 
-# Expose PHP-FPM port
 EXPOSE 9000
-
-# Start PHP-FPM server
 CMD ["php-fpm"]
