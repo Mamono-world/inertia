@@ -14,7 +14,7 @@ class RegistrationsController extends Controller
     public function index()
     {
         return Inertia::render('registrations', [
-            'users' => User::all()->whereNull('approved') // Fetch all users and pass them to the Vue component
+            'users' => User::all()->where('approved', '!=', true) // Fetch all users and pass them to the Vue component
         ]);
     }
 
