@@ -25,7 +25,6 @@ RUN composer install --no-dev --optimize-autoloader --prefer-dist
 
 # Now that Ziggy exists, we can safely build frontend
 RUN npm install && npm run build
-RUN php artisan migrate
 
 EXPOSE 9000
 CMD ["php-fpm"]
